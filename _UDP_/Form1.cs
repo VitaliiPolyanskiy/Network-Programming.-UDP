@@ -14,8 +14,8 @@ namespace _UDP_
         [Serializable]
         public class Message
         {
-            public string mes; // текст сообщения
-            public string user; // имя пользователя
+            public string mes; // текст повідомлення
+            public string user; // ім'я користувача
             public Message()
             {
 
@@ -26,33 +26,33 @@ namespace _UDP_
         public Form1()
         {
             InitializeComponent();
-            // Получим контекст синхронизации для текущего потока 
+            // Отримаємо контекст синхронізації для поточного потоку 
             uiContext = SynchronizationContext.Current;
             WaitClientQuery();
         }
 
-        // прием сообщения
+        // прийом повідомлення
         private async void WaitClientQuery()
         {
-            await Task.Run(async() =>
+            await Task.Run(async () =>
             {
                 try
                 {
-                    // Инициализируем новый экземпляр класса UdpClient и связываем его с заданным номером локального порта.
-                    UdpClient client = new UdpClient(49152 /* порт */); // принимаются все входящие соединения с локальной конечной точкой
+                    // Ініціалізуємо новий екземпляр класу UdpClient і зв'язуємо його з заданим номером локального порту.
+                    UdpClient client = new UdpClient(49152 /* порт */); // приймаються всі вхідні з'єднання з локальною кінцевою точкою
                     while (true)
                     {
-                        UdpReceiveResult result = await client.ReceiveAsync(); // получим UDP-датаграмму
-                        IPEndPoint remote = result.RemoteEndPoint; // информация об удаленном хосте, который отправил датаграмму
-                        byte[] arr = result.Buffer; // датаграмма
+                        UdpReceiveResult result = await client.ReceiveAsync(); // отримаємо UDP-датаграму
+                        IPEndPoint remote = result.RemoteEndPoint; // інформація про віддалений хост, який відправив датаграму
+                        byte[] arr = result.Buffer; // датаграма
                         if (arr.Length > 0)
                         {
-                            // Создадим поток, резервным хранилищем которого является память.
+                            // Створимо потік, резервним сховищем якого є пам'ять.
                             MemoryStream stream = new MemoryStream(arr);
-                            // XmlSerializer сериализует и десериализует объект в XML-формате 
+                            // XmlSerializer серіалізує та десеріалізує об'єкт у XML-форматі 
                             XmlSerializer serializer = new XmlSerializer(typeof(Message));
-                            Message m = serializer.Deserialize(stream) as Message; // выполняем десериализацию
-                            // полученную от удаленного узла информацию добавляем в список
+                            Message m = serializer.Deserialize(stream) as Message; // виконуємо десеріалізацію
+                            // отриману від віддаленого вузла інформацію додаємо до списку
                             uiContext.Send(d => listBox1.Items.Add(remote.Address.ToString()), null);
                             uiContext.Send(d => listBox1.Items.Add(m.user), null);
                             uiContext.Send(d => listBox1.Items.Add(m.mes), null);
@@ -62,38 +62,38 @@ namespace _UDP_
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Получатель: " + ex.Message);
+                    MessageBox.Show("Отримувач: " + ex.Message);
                 }
             });
         }
 
-        // отправление сообщения
+        // відправлення повідомлення
         private async void button1_Click(object sender, EventArgs e)
         {
-            await Task.Run(async() =>
+            await Task.Run(async () =>
             {
                 try
                 {
-                    // Инициализируем новый экземпляр класса UdpClient и устанавливаем удаленный узел
+                    // Ініціалізуємо новий екземпляр класу UdpClient і встановлюємо віддалений вузол
                     UdpClient client = new UdpClient(
-                        textBox1.Text.ToString() /* IP-адрес удаленного DNS-узла, к которому планируется подключение. */,
-                        49152 /* Номер удаленного порта, к которому планируется выполнить подключение. */ );
-                    // Создадим поток, резервным хранилищем которого является память.
+                        textBox1.Text.ToString() /* IP-адреса віддаленого DNS-вузла, до якого планується підключення. */,
+                        49152 /* Номер віддаленого порту, до якого планується виконати підключення. */ );
+                    // Створимо потік, резервним сховищем якого є пам'ять.
                     MemoryStream stream = new MemoryStream();
-                    // XmlSerializer сериализует и десериализует объект в XML-формате 
+                    // XmlSerializer серіалізує та десеріалізує об'єкт у XML-форматі 
                     XmlSerializer serializer = new XmlSerializer(typeof(Message));
                     Message m = new Message();
-                    m.mes = textBox2.Text; // текст сообщения
-                    m.user = Environment.UserDomainName + @"\" + Environment.UserName; // имя пользователя
-                    serializer.Serialize(stream, m); // выполняем сериализацию
-                    byte[] arr = stream.ToArray(); // записываем содержимое потока в байтовый массив
+                    m.mes = textBox2.Text; // text повідомлення
+                    m.user = Environment.UserDomainName + @"\" + Environment.UserName; // ім'я користувача
+                    serializer.Serialize(stream, m); // виконуємо серіалізацію
+                    byte[] arr = stream.ToArray(); // записуємо вміст потоку в байтовий масив
                     stream.Close();
-                    await client.SendAsync(arr, arr.Length); // передаем UDP-датаграмму на удаленный узел
-                    client.Close(); // закрываем UDP-подключение и освобождаем все ресурсы, связанные с объектом UdpClient.
+                    await client.SendAsync(arr, arr.Length); // передаємо UDP-датаграму на віддалений вузол
+                    client.Close(); // закриваємо UDP-підключення та звільняємо всі ресурси, пов'язані з об'єктом UdpClient.
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Отправитель: " + ex.Message);
+                    MessageBox.Show("Відправник: " + ex.Message);
                 }
             });
         }
